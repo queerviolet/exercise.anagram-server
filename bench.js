@@ -39,7 +39,7 @@ var hammer = function() {
   });
 };
 
-var CONCURRENT_HAMMERS = 10;
+var CONCURRENT_HAMMERS = 1;
 while (--CONCURRENT_HAMMERS >= 0) {
   hammer();
 }
