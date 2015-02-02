@@ -5,7 +5,7 @@ var app = express()
 app.use(express.static('.'));
 
 app.get('/:word', function(req, res) {
-  // res.json(x) will return x as json.
+  // TODO: find anagrams for req.params.word
   res.json([]);
   // Always call res.end() when you're done.  
   res.end();

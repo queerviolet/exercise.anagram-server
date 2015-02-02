@@ -20,6 +20,10 @@ var hammer = function() {
   var path = '/' + words[Math.floor(Math.random() * words.length)];
   var start = microtime.now();
   ++stats.reqs;
+  // agent: false means "don't use pooled connections"
+  // I was running out of sockets. I am unsure if the HTTP agent pool was
+  // at fault, but in any case, I think I don't want keep-alive for purposes
+  // of this benchmark.
   http.get({host: '127.0.0.1', port: 4567, path: path, agent: false}, function(res) {
     stats.time += microtime.now() - start;
     res.on('data', function() { });    
