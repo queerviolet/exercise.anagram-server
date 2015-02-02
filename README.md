@@ -84,7 +84,7 @@ the number of concurrent requests, performace is plummeting precipitiously.
 
 Why do you suppose this is?
 
-## 5. Write it in Javascript with Express ##
+## 4. Write it in Javascript with Express ##
 
 Now do it again, this time in Javascript. [Express](http://expressjs.com/) is
 a small web framework for Node. It's inspired by Sinatra, so the code will
@@ -94,14 +94,14 @@ included my `dict.js` in the repository, so you can use it. It's already
 required by the code in [anagrams.js](anagrams.js). `words` there is an array
 of words taken from `/usr/share/dict/words` on my computer.
 
-## 6. Test it out ##
+## 5. Test it out ##
 
 Since both of your anagrams servers have the same interface, you shouldn't
 have to change `index.html` at all to get it to work with the JS server. It
 doesn't know or care what it's talking to—it only cares that it can `GET /some_word`
 and get a JSON response.
 
-## 7. Race! ##
+## 6. Race! ##
 
 Now, for fun, edit [bench.js](bench.js) to point at your Node server.
 
