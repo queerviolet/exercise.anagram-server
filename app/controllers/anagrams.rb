@@ -1,6 +1,3 @@
-require 'sinatra'
-require 'json'
-
 get '/:word' do |word|
   content_type :json
   # TODO: Return anagrams.
@@ -8,5 +5,5 @@ get '/:word' do |word|
 end
 
 get '/' do
-  send_file 'index.html'
+  redirect '/index.html'
 end
