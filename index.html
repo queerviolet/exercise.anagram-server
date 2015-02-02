@@ -7,7 +7,7 @@
     <input type="text" oninput="search(event)">
     <ul id="anagrams"></ul>
     <script>
-    "use strict";
+   "use strict";    
     var list = document.querySelector('#anagrams');
     var search = function(event) {
       var word = event.target.value;
@@ -15,9 +15,27 @@
       // into list.
       //
       // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
-      //
+      // 
       // Hint: xhr.responseType = 'json'.
-      
+      if (word) {
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = 'json';
+        xhr.onload = function() {
+          if (xhr.response) {
+            // innerHTML is slow. document.createElement is better.
+            // (But this is a quick little test page).
+            list.innerHTML = xhr.response.map(function(a) {
+              return '<li>' + a + '</li>'
+            }).join('');
+          } else {
+            list.innerHTML = 'No anagrams for ' + word + '.';
+          }
+        };
+        xhr.open("get", word, true);
+        xhr.send();
+      } else {
+        list.innerHTML = '';
+      }
     }
     </script>
   </body>
