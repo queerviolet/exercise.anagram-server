@@ -7,7 +7,7 @@
     <input type="text" oninput="search(event)">
     <ul id="anagrams"></ul>
     <script>
-    "use strict";    
+    "use strict";
     var list = document.querySelector('#anagrams');
     var search = function(event) {
       var word = event.target.value;
@@ -15,9 +15,25 @@
       // into list.
       //
       // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
-      // 
+      //
       // Hint: xhr.responseType = 'json'.
+      var xhr = new XMLHttpRequest();
+      xhr.onload = function() { display(xhr.response) };
+      xhr.open('get', '/' + word, true);
+      xhr.responseType = 'json';
+      xhr.send();
+    };
+
+    var display = function(response){
+      response.forEach(function(item){
+        var node = document.createElement("LI");
+        var nodeText = document.createTextNode(item);
+        node.appendChild(nodeText);
+        list.appendChild(node);
+      });
+      // console.log(response)
     }
     </script>
+
   </body>
 </html>
