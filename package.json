@@ -1,0 +1,8 @@
+{
+  "name": "anagrams",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "^4.11.2",
+    "microtime": "^1.2.0"
+  }
+}
