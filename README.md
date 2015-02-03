@@ -13,12 +13,16 @@ of that word.
 
 You're actually making a simple web API. Here's how it'll work:
 
-To find all the anagrams of a word, `GET /:word`. The result will be returned
+To find all the anagrams of a word, `GET /anagrams?word=:word`. The result will be returned
 as a JSON list.
 
-So, if you go to `http://localhost:3000/agnor`, the server should reply:
+So, if your server is running on `localhost` on port `9393` and you go to
+`http://localhost:9393/anagrams?word=agnor`, the server should reply with all
+the dictionary words that are anagrams of "agnor":
 
     ["Ronga","rogan","organ","orang","Orang","nagor","groan","grano","goran","argon","angor"]
+
+Believe it or not, those are all real words in `/usr/share/dict/words`.
 
 That's it! We'll set up the server to serve a little test page at `/` that
 makes XMLHttpRequests for whatever we type into a text box and prints the
@@ -26,89 +30,74 @@ results.
 
 ## 2. Write it in Ruby with Sinatra ##
 
-You can solve the anagrams problem however, even reusing your Phase 1 code if
-you like. I've gotten you started on the Sinatra code in
+You can solve the anagrams problem however you like, even reusing your Phase 1
+code if you want. I've gotten you started on the Sinatra code in
 [app/controllers/anagrams.rb](app/controllers/anagrams.rb).
 
-You can run your server with the `shotgun` command. Shotgun restarts
-your server on every request, so you don't have to keep doing it.
-
-You might take this moment to see if you can improve your methodology at all,
-or simplify your life in some other way. For example, I wrote a script to
-convert the dictionary into a *giiiiiiiant* Ruby array literal, so I could just
-`require_relative 'dict'`.
+You can run your server with the `shotgun` command. Shotgun restarts your
+server on every request, so you don't have to restart it after you make
+changes.
 
 When you have it working, you should be able to run your program with `ruby anagrams.rb`,
-and make requests like: `http://localhost:9393/this`.
+and make requests like: `http://localhost:9393/anagrams?word=this`.
 
-The Sinatra skeleton is set up to serve files from [public](public). There's an
-[index.html](index.html) there which will query your server for anagrams as you type.
+The Sinatra skeleton is set up to serve files from [public](public). There's
+an [index.html](public/index.html) there which will let you search for
+anagrams.  Take a look at it, figure out how it's displaying search results,
+then take your server for a spin.
 
-## 3. Benchmark it! ##
+## 3. Anagrams Instant Backend ##
 
-I've included a little node program [bench.js](bench.js) that hammers away at
-an Anagrams server as fast as it can.
+If your server is anything like my first attempt, it's pretty slow. It took
+about thirty seconds to handle one anagram query. I think that we can improve
+on that a lot.
 
-First, you'll need to run `npm install` to download the
-dependencies. This is equivalent to `bundle install`, and you only
-have to do it once.
+Let's think about where we're spending our time. Right now, every time we get
+a query, we scan over the entire dictionary looking for other words with the
+same canonical form. Maybe that's something we could do beforehand! Before we
+dive into that, Let's do some back of the envelope calculations to see if it's
+even remotely feasible.
 
-Next, if you're running your server under shotgun, kill it with ^C and start
-it with `rackup` instead, running on port 4567:
+  * We'll have to store every word in memory. There are 250k words in our
+    dictionary. It looks like most words only have a few anagrams. Let's say the
+    full set of anagrams for each word would be around 100 bytes (approximately 100
+    characters). It's probably less than that. But even if it isn't, we would only
+    have to store 250_000 * 100 bytes = 25_000_000 bytes = 25 MB
+    of data in memory. Unless you're running your server on a wristwatch, that sort
+    of memory use is not a problem. (And actually, most smart watches have at least
+    512 MB of memory).
 
-    rackup -p 4567
+  * We'll also have to find all anagrams for every word in the dictionary. If we use
+    our current method, it'll probably take about an hour to do that. That's bad, but
+    it's not the end of the world. Our data is totally static, so we could generate
+    all the anagrams once and save them in a data file to use later. But maybe we can also
+    come up with a faster way of finding anagrams, one in which we only have to make
+    one pass over the dictionary.
 
-Why? Remember, `shotgun` restarts your server each time a new
-connection comes in. You don't want to be doing that in the middle of
-a benchmark.
+Now that we know it's feasible, let's think about how we should structure our index.
 
-Finally, run the benchmark with `node bench.js` and see what results
-you get!
+We want to do very fast lookups into a literal dictionary, so a hash seems
+like a good choice. What should the keys and values be?
 
-bench.js reports results in kqps—that is, thousands of queries per second. My
-Sinatra program was able to handle about 0.75kqps—that is, 750,000 anagram
-lookups per second on my laptop.
+Let's start with the values: it's a good bet that the values should be what we
+want to return, a list of words.
 
-On the lab machines, you should see better performance than that. If you're
-not, maybe you can change your server to be faster somehow. I'll give you a
-hint: my server does almost no work at all when serving anagrams, but it
-probably takes longer to start up and consumes more memory than yours.
+What should the keys be? Well, we'll be receiving a word as a query, so we
+have to be able to derive the key from a word. It could just *be* the word,
+but I think that would make building the index difficult, because then each
+word in the dictionary will potentially exist under multiple keys, and as
+we loop through the dictionary, how will we know which keys to shovel each
+word into without looking at all the others? That's exactly what we don't
+want to do!
 
-That 0.75kqps number is with a maximum of one request in flight. One request
-in flight means that the benchmark is sending a request, waiting for it to
-come back, then sending another. If you set `CONCURRENT_HAMMERS` in bench.js
-to a higher number, it'll send out more requests at a time. If I set it to 2,
-I get around 0.42kqps. If I set it to 5, it drops to 0.17kqps. If I set it to
-10, I get around 0.087kqps—a measley 87,000 queries per second. As we increase
-the number of concurrent requests, performace is plummeting precipitiously.
+What we really want is for all words which are anagrams of each other to
+have the same key. 
 
-Why do you suppose this is?
+I'll let you take it from here.
 
-## 4. Write it in Javascript with Express ##
+## 4. Anagrams Instant Frontend ##
 
-Now do it again, this time in Javascript. [Express](http://expressjs.com/) is
-a small web framework for Node. It's inspired by Sinatra, so the code will
-look somewhat similar. I've started you off in [anagrams.js](anagrams.js).
-Also, it's your lucky day: since bench.js requires a word dictionary, I've
-included my `dict.js` in the repository, so you can use it. It's already
-required by the code in [anagrams.js](anagrams.js). `words` there is an array
-of words taken from `/usr/share/dict/words` on my computer.
-
-## 5. Test it out ##
-
-Since both of your anagrams servers have the same interface, you shouldn't
-have to change `index.html` at all to get it to work with the JS server. It
-doesn't know or care what it's talking to—it only cares that it can `GET /some_word`
-and get a JSON response.
-
-## 6. Race! ##
-
-Now, for fun, edit [bench.js](bench.js) to point at your Node server.
-
-My Javascript server is about 50% faster than my Ruby server, because the
-Javascript engine that powers Node and Chrome (named V8) is faster at this
-task (and most tasks) than the Ruby interpreter. Speed is by no means
-everything, so that's not the end of the world, but it's good to know.
-
-The performance of the JS server also drops off pretty fast when I scale the
-number of concurrent connections. What does that tell us?
+Once you've got your anagrams server running (much, much) faster, let's make
+our little test frontend page do search as you type. We're going to do this in
+a very simple way: add an `oninput` attribute to the word input field, and
+have it call `submit` on its parent form.

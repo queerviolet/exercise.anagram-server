@@ -1,7 +1,7 @@
-get '/:word' do |word|
+get '/anagrams' do
   content_type :json
-  # TODO: Return anagrams.
-  [].to_json
+  # TODO: Return anagrams for params[:word]
+  ['foo', 'bar', 'baz', params[:word]].to_json
 end
 
 get '/' do

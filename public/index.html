@@ -2,35 +2,18 @@
 <html>
   <head>
     <title>Anagrams</title>
+    <style>
+      body { font-size: 14pt; }
+    </style>
   </head>
   <body>
-    <input type="text" oninput="search(event)">
-    <ul id="anagrams"></ul>
-    <script>
-   "use strict";    
-    var list = document.querySelector('#anagrams');
-    var search = function(event) {
-      var word = event.target.value;
-      if (word) {
-        var xhr = new XMLHttpRequest();
-        xhr.responseType = 'json';
-        xhr.onload = function() {
-          if (xhr.response) {
-            // innerHTML is slow. document.createElement is better.
-            // (But this is a quick little test page).
-            list.innerHTML = xhr.response.map(function(a) {
-              return '<li>' + a + '</li>'
-            }).join('');
-          } else {
-            list.innerHTML = 'No anagrams for ' + word + '.';
-          }
-        };
-        xhr.open("get", word, true);
-        xhr.send();
-      } else {
-        list.innerHTML = '';
-      }
-    }
-    </script>
+    <!-- target="results" makes the browser show the results in the window
+         named "results" (the iframe below the form) rather than navigate
+         the page. -->
+    <form method="get" action="anagrams" target="results">
+      <input type="text" name="word" oninput="this.parentNode.submit();">
+      <input type="submit" value="Look for anagrams">
+    </form>
+    <iframe name="results" width="100%" height="50%" style="border: 0;"></iframe>
   </body>
 </html>
